@@ -9,18 +9,35 @@ using System.Threading.Tasks;
 
 namespace MidiMusicTimerViewer
 {
+    /// <summary>
+    /// Collects and aggregates note messages.
+    /// </summary>
     class NoteCollector
     {
-        //private readonly Dictionary<Channel, Dictionary<Pitch, NoteOnMessage>> incompleteMessages = new Dictionary<Channel, Dictionary<Pitch, NoteOnMessage>>();
-
+        /// <summary>
+        /// A mapping between channel, pitch, and note on message.  Used to build Notes when the note off message is received.
+        /// </summary>
         private readonly ConcurrentDictionary<Channel, ConcurrentDictionary<Pitch, NoteOnMessage>> incompleteMessages = new ConcurrentDictionary<Channel, ConcurrentDictionary<Pitch, NoteOnMessage>>();
 
-        private List<Note> completedNotes = new List<Note>();
+        /// <summary>
+        /// A collection of notes which have started and ended.
+        /// </summary>
+        private readonly List<Note> completedNotes = new List<Note>();
 
+        /// <summary>
+        /// The clock used to determine start and end times for notes.
+        /// </summary>
         private readonly Clock clock;
 
+        /// <summary>
+        /// An object used to protect access to the completed notes collection.
+        /// </summary>
         private readonly object lockObject = new object();
 
+        /// <summary>
+        /// Initializes a new instance of the NoteCollector class.
+        /// </summary>
+        /// <param name="clock">The clock that serves a as a reference for note start and end times.</param>
         public NoteCollector(Clock clock)
         {
             this.clock = clock;
@@ -35,6 +52,10 @@ namespace MidiMusicTimerViewer
             }
         }
 
+        /// <summary>
+        /// Process the Note On message.
+        /// </summary>
+        /// <param name="noteOnMessage">The note on message.</param>
         public void ProcessMidiMessage(NoteOnMessage noteOnMessage)
         {
             var channel = noteOnMessage.Channel;
@@ -46,6 +67,10 @@ namespace MidiMusicTimerViewer
             incompleteMessages[channel][noteOnMessage.Pitch] = noteOnMessage;
         }
 
+        /// <summary>
+        /// Process the Note Off message.
+        /// </summary>
+        /// <param name="message">The note off message.</param>
         public void ProcessMidiMessage(NoteOffMessage message)
         {
             var channel = message.Channel;
@@ -55,6 +80,7 @@ namespace MidiMusicTimerViewer
             NoteOnMessage noteOnMessage = incompleteMessages[channel][message.Pitch];
             if (noteOnMessage == null)
             {
+                Trace.TraceWarning("Got note off message but don't have a note on message for channel " + channel.Name() + " and pitch " + message.Pitch.NotePreferringFlats() + ".  Ignoring message.");
                 return;
             }
 
@@ -62,10 +88,24 @@ namespace MidiMusicTimerViewer
 
             lock (lockObject)
             {
-                completedNotes.Add(new Note { Channel = channel, StartTime = noteOnMessage.Time, EndTime = message.Time, Pitch = noteOnMessage.Pitch });
+                completedNotes.Add(new Note 
+                { 
+                    Channel = channel, 
+                    StartTime = noteOnMessage.Time, 
+                    EndTime = message.Time, 
+                    Pitch = noteOnMessage.Pitch 
+                });
             }
         }
 
+        /// <summary>
+        /// Get the set of Notes this collector has tracked.
+        /// </summary>
+        /// <returns>A sequence of Notes.</returns>
+        /// <remarks>
+        /// This returns the union of completed notes (notes with both start and end messages) as well as notes that are still on.  For notes that are still on
+        /// the end time is taken from the clock's current time.
+        /// </remarks>
         public IEnumerable<Note> GetNotes()
         {
             Note[] notes = null;
@@ -77,6 +117,10 @@ namespace MidiMusicTimerViewer
             return notes.Union(GetIncompleteNotes().ToArray());
         }
 
+        /// <summary>
+        /// Search the incomplete message map and return Notes for each note on message that isn't off yet.
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<Note> GetIncompleteNotes()
         {
             foreach (var i in Enumerable.Range(0, 16))
@@ -87,7 +131,13 @@ namespace MidiMusicTimerViewer
                     NoteOnMessage message = dictionary[(Pitch)j];
                     if (message != null)
                     {
-                        yield return new Note { Channel = (Channel)i, StartTime = message.Time, EndTime = clock.Time, Pitch = message.Pitch };
+                        yield return new Note 
+                        { 
+                            Channel = (Channel)i, 
+                            StartTime = message.Time, 
+                            EndTime = clock.Time, 
+                            Pitch = message.Pitch 
+                        };
                     }
                 }
             }
