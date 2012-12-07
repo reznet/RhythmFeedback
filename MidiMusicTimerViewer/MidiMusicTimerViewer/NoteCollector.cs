@@ -12,7 +12,7 @@ namespace MidiMusicTimerViewer
     /// <summary>
     /// Collects and aggregates note messages.
     /// </summary>
-    class NoteCollector
+    public class NoteCollector
     {
         /// <summary>
         /// A mapping between channel, pitch, and note on message.  Used to build Notes when the note off message is received.

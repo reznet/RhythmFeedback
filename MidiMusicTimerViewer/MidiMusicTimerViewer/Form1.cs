@@ -14,7 +14,7 @@ namespace MidiMusicTimerViewer
 {
     public partial class Form1 : Form
     {
-        private const int SecondsPerScreen = 10;
+        
 
         private List<NoteOnMessage> messages;
 
@@ -31,6 +31,9 @@ namespace MidiMusicTimerViewer
             messages = new List<NoteOnMessage>();
             clock = new Clock(128);
             noteCollector = new NoteCollector(clock);
+
+            notesControl1.Clock = clock;
+            notesControl1.NoteCollector = noteCollector;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -39,32 +42,9 @@ namespace MidiMusicTimerViewer
 
             inputDevice = InputDevice.InstalledDevices[0];
             inputDevice.Open();
-            inputDevice.NoteOn += msg => { noteCollector.ProcessMidiMessage(msg); messages.Add(msg); Invalidate(); };
-            inputDevice.NoteOff += msg => { noteCollector.ProcessMidiMessage(msg); Invalidate(); };
+            inputDevice.NoteOn += msg => { noteCollector.ProcessMidiMessage(msg); messages.Add(msg); notesControl1.Invalidate(); };
+            inputDevice.NoteOff += msg => { noteCollector.ProcessMidiMessage(msg); notesControl1.Invalidate(); };
             inputDevice.StartReceiving(clock);
-        }
-
-        private void Form1_Paint(object sender, PaintEventArgs e)
-        {
-            int currentScreen = (int)(clock.Time / SecondsPerScreen);
-            float widthOneSecond = (float)ClientSize.Width / (float)SecondsPerScreen;
-            float pixelsPerPitch = ClientSize.Height / 127f;
-
-            string currentScreenText = currentScreen.ToString(CultureInfo.InvariantCulture);
-            SizeF currentScreenTextSize = e.Graphics.MeasureString(currentScreenText, this.Font);
-            e.Graphics.DrawString(currentScreen.ToString(CultureInfo.InvariantCulture), this.Font, Brushes.Black, new RectangleF(new PointF(ClientRectangle.Right - currentScreenTextSize.Width, currentScreenTextSize.Height), currentScreenTextSize));
-
-            float widthOfSecond = ClientSize.Width / SecondsPerScreen;
-
-            foreach (var note in noteCollector.GetNotes().Where(n => SecondsPerScreen * currentScreen <= n.StartTime && n.StartTime <= (currentScreen + 1) * SecondsPerScreen))
-            {
-                float x = (note.StartTime % SecondsPerScreen) * widthOfSecond;
-                float y = ClientSize.Height - (((int)note.Pitch + 1) * pixelsPerPitch);
-                float w = ((note.EndTime - note.StartTime) * widthOneSecond);
-                float h = pixelsPerPitch;
-                e.Graphics.FillRectangle(Brushes.Blue, new RectangleF(x, y, w, h));
-                e.Graphics.DrawLine(Pens.Black, x, 0, x, ClientSize.Height);
-            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -84,7 +64,7 @@ namespace MidiMusicTimerViewer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Invalidate();
+            notesControl1.Invalidate();
         }
     }
 }
