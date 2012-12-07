@@ -56,6 +56,12 @@
     </Compile>
     <Compile Include="Note.cs" />
     <Compile Include="NoteCollector.cs" />
+    <Compile Include="NotesControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="NotesControl.Designer.cs">
+      <DependentUpon>NotesControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
