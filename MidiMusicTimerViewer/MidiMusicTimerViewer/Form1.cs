@@ -44,22 +44,6 @@ namespace MidiMusicTimerViewer
             inputDevice.StartReceiving(clock);
         }
 
-        //private void Form1_Paint(object sender, PaintEventArgs e)
-        //{
-        //    int currentScreen = (int)(clock.Time / SecondsPerScreen);
-
-        //    string currentScreenText = currentScreen.ToString(CultureInfo.InvariantCulture);
-        //    SizeF currentScreenTextSize = e.Graphics.MeasureString(currentScreenText, this.Font);
-        //    e.Graphics.DrawString(currentScreen.ToString(CultureInfo.InvariantCulture), this.Font, Brushes.Black, new RectangleF(new PointF(ClientRectangle.Right - currentScreenTextSize.Width, currentScreenTextSize.Height), currentScreenTextSize));
-
-        //    float widthOfSecond = ClientSize.Width / SecondsPerScreen;
-
-        //    foreach (var message in messages.Where(m => SecondsPerScreen * currentScreen < m.Time && m.Time < (currentScreen+1) * SecondsPerScreen))
-        //    {
-        //        e.Graphics.FillRectangle(Brushes.Blue, new RectangleF((message.Time % SecondsPerScreen) * widthOfSecond, 100, 10, 10));
-        //    }
-        //}
-
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             int currentScreen = (int)(clock.Time / SecondsPerScreen);
@@ -74,13 +58,13 @@ namespace MidiMusicTimerViewer
 
             foreach (var note in noteCollector.GetNotes().Where(n => SecondsPerScreen * currentScreen <= n.StartTime && n.StartTime <= (currentScreen + 1) * SecondsPerScreen))
             {
-                e.Graphics.FillRectangle(Brushes.Blue, new RectangleF((note.StartTime % SecondsPerScreen) * widthOfSecond, ClientSize.Height - (((int)note.Pitch + 1) * pixelsPerPitch), ((note.EndTime - note.StartTime) * widthOneSecond), pixelsPerPitch));
+                float x = (note.StartTime % SecondsPerScreen) * widthOfSecond;
+                float y = ClientSize.Height - (((int)note.Pitch + 1) * pixelsPerPitch);
+                float w = ((note.EndTime - note.StartTime) * widthOneSecond);
+                float h = pixelsPerPitch;
+                e.Graphics.FillRectangle(Brushes.Blue, new RectangleF(x, y, w, h));
+                e.Graphics.DrawLine(Pens.Black, x, 0, x, ClientSize.Height);
             }
-
-            //foreach (var message in messages.Where(m => SecondsPerScreen * currentScreen < m.Time && m.Time < (currentScreen + 1) * SecondsPerScreen))
-            //{
-            //    e.Graphics.FillRectangle(Brushes.Blue, new RectangleF((message.Time % SecondsPerScreen) * widthOfSecond, 100, 10, 10));
-            //}
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
