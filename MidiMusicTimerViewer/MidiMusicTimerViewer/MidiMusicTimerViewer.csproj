@@ -32,8 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Midi">
-      <HintPath>..\..\..\..\..\Downloads\midi-dot-net_1.1.0\midi-dot-net_1.1.0\Midi.dll</HintPath>
+    <Reference Include="Midi, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Externals\midi-dot-net_1.1.0\Midi.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
